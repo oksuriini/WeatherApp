@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+    integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+    crossorigin=""></script>
+    <style>
+        #map{
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        Weather at my location app:
+    </h1>
+    <div id="">
+        <label>Latitude: <input id="lat" value=""></label><br>
+        <label>Longitude: <input id="lon" value=""></label><br>    
+        <button id="get">Get Coordinates</button>
+        <button id="set">Validate Coordinates</button>
+    </div>
+    <div>
+        <button id="fetch">Get Weather</button>
+    </div>
+    <div>
+        <button id="process">Process</button>
+    </div>
+
+    <h2>Sää kuvaaja</h2>
+    <div id="map"></div>
+</body>
+<script src="https://d3js.org/d3.v6.js"></script>
+<script>
+
+    document.getElementById("get").addEventListener("click", async (e) =>{
+        try{
+        navigator.geolocation.getCurrentPosition((succ)=>{
+            document.getElementById("lat").value = succ.coords.latitude
+            document.getElementById("lon").value = succ.coords.longitude
+            window.alert(`Your current location is Latitude: ${succ.coords.latitude}, Longitude: ${succ.coords.longitude}`)
+        }, (error) => {
+            console.log(error)
+        })}
+        catch(error){
+            window.alert("Something went wrong while geolocating")
+            console.log(error)
+        }
+    })
+
+    
+
+    document.getElementById("set").addEventListener("click", async (e) =>{
+        if(Number.isNaN(parseFloat(document.getElementById("lat").value)) || Number.isNaN(parseFloat(document.getElementById("lon").value))){
+            window.alert("Illegal input, try typing latitude and longitude again")
+        } else{
+            window.alert("Coordinates are legal, you can continue by pushing 'Get Weather'-button")
+        }
+    })
+
+    document.getElementById("fetch").addEventListener("click", async (e) =>{
+        if(Number.isNaN(parseFloat(document.getElementById("lat").value)) || Number.isNaN(parseFloat(document.getElementById("lon").value))){
+            window.alert("Illegal input, try typing latitude and longitude again")
+        }else{
+            const data = {"latitude": parseFloat(document.getElementById("lat").value), "longitude": parseFloat(document.getElementById("lon").value)}
+            const options = {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            }
+            const response = fetch("http://127.0.0.1:3010/weather/", options)
+        }
+    })
+    
+    document.getElementById("process").addEventListener("click", async (e) => {
+        const response = await fetch("http://127.0.0.1:3010/data")
+        .then( async (res) => {
+            return await res.json()
+        })
+        
+        const dataTemp = response.hourly.temperature_2m
+        const dataHour = response.hourly.time
+
+        var map = L.map('map').setView([51.505, -0.09], 10);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // TODO LEAFLET MAP AND INFORMATION TO CLIENT WHAT KIND OF WEATHER THERE IS NOW
+        
+    })
+
+    
+
+
+    
+</script>
+</html>
