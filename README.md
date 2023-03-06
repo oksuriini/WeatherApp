@@ -22,4 +22,14 @@ Additionally I'm planning to make a d3 chart to show temperature every hour.
 
 ## Install instructions:
 
-TODO
+You need to install Node.js in order to be able to run the application, after which follow these instructions:
+
+`git clone git@github.com:oksuriini/WeatherApp.git`
+
+`cd WeatherApp`
+
+`npm install`
+
+`npm start`
+
+App is available in 127.0.0.1:3010.
