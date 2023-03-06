@@ -32,4 +32,4 @@ You need to install Node.js in order to be able to run the application, after wh
 
 `npm start`
 
-App is available in 127.0.0.1:3010.
+App is available at 127.0.0.1:3010.
