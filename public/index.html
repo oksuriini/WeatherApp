@@ -34,18 +34,115 @@
         <button id="process">Process</button>
     </div>
 
-    <h2>Sää kuvaaja</h2>
+    <p>Weather in the next 7 days</p>
+
+    <div id="days"></div>
+
+    <h2>Weather d3 TODO thingamajinga</h2>
     <div id="map"></div>
 </body>
 <script src="https://d3js.org/d3.v6.js"></script>
 <script>
+
+    function weatherCodeFixer(code){
+        let retSent = ""
+        if(code < 1){
+            retSent = "Clear sky"
+            return retSent
+        } else if(code < 4){
+            retSent = "Mainly "
+            switch (code) {
+                case 1: retSent += "clear"; break;
+                case 2: retSent += "partly cloudy"; break;
+                case 3: retSent += "overcast";break;
+            }
+            return retSent
+        } else if(code < 49){
+            retSent = "Mostly "
+            switch (code) {
+                case 45:retSent += "foggy";break;
+                case 48:retSent += "depositing rime fog";break;
+            } 
+            return retSent
+        } else if(code < 56){
+            switch (code) {
+                case 51: retSent += "Light"; break;
+                case 53: retSent += "Moderate"; break;
+                case 55: retSent += "Dense";break;
+            }
+            retSent += " drizzle"
+            return retSent
+        } else if(code < 58){
+            switch (code) {
+                case 56:retSent += "Light";break;
+                case 57:retSent += "Dense";break;
+            }
+            retSent += " freezing drizzle"
+            return retSent
+        } else if(code < 66){
+            switch (code) {
+                case 61: retSent += "Slight"; break;
+                case 63: retSent += "Moderate"; break;
+                case 65: retSent += "Heavy";break;
+            }
+            retSent += " rain"
+            return retSent
+        } else if(code < 68){
+            switch (code) {
+                case 66:retSent += "Light";break;
+                case 67:retSent += "Dense";break;
+            }
+            retSent += " freezing rain"
+            return retSent
+        } else if(code < 77){
+            switch (code) {
+                case 71: retSent += "Slight"; break;
+                case 73: retSent += "Moderate"; break;
+                case 75: retSent += "Heavy";break;
+            }
+            retSent += " snow fall"
+            return retSent
+        } else if(code < 78){
+            switch (code) {
+                case 77:retSent += "Snow grains";break;
+            }
+            return retSent
+        } else if(code < 83){
+            switch (code) {
+                case 80: retSent += "Slight"; break;
+                case 81: retSent += "Moderate"; break;
+                case 82: retSent += "Violent";break;
+            }
+            retSent += " rain showers"
+            return retSent
+        }else if(code < 87){
+            switch (code) {
+                case 85:retSent += "Slight";break;
+                case 86:retSent += "Heavy";break;
+            }
+            retSent += " snow showers"
+            return retSent
+        } else if( code == 95){
+            retSent = "Thunderstorms"
+            return retSent
+        } else if (code < 100){
+            switch (code) {
+                case 96:retSent += "Thunderstorm with slight";break;
+                case 99:retSent += "Thunderstorm with heavy";break;
+            }
+            retSent += " hail"
+            return retSent
+        }else{
+        retSent = `Code ${code}, is not found in catalogue`
+        return retSent
+    }
+    }
 
     document.getElementById("get").addEventListener("click", async (e) =>{
         try{
         navigator.geolocation.getCurrentPosition((succ)=>{
             document.getElementById("lat").value = succ.coords.latitude
             document.getElementById("lon").value = succ.coords.longitude
-            window.alert(`Your current location is Latitude: ${succ.coords.latitude}, Longitude: ${succ.coords.longitude}`)
         }, (error) => {
             console.log(error)
         })}
@@ -58,10 +155,10 @@
     
 
     document.getElementById("set").addEventListener("click", async (e) =>{
-        if(Number.isNaN(parseFloat(document.getElementById("lat").value)) || Number.isNaN(parseFloat(document.getElementById("lon").value))){
-            window.alert("Illegal input, try typing latitude and longitude again")
+        if(Number.isNaN(parseFloat(document.getElementById("lat").value)) && Number.isNaN(parseFloat(document.getElementById("lon").value))){
+            console.log("Illegal input, try typing latitude and longitude again")
         } else{
-            window.alert("Coordinates are legal, you can continue by pushing 'Get Weather'-button")
+            console.log("Coordinates are legal, you can continue by pushing 'Get Weather'-button")
         }
     })
 
@@ -86,23 +183,110 @@
         .then( async (res) => {
             return await res.json()
         })
-        
-        const dataTemp = response.hourly.temperature_2m
-        const dataHour = response.hourly.time
+        const timeData = response.hourly.time;
+        const tempData = response.hourly.temperature_2m;
+        console.log(tempData)
+        console.log(timeData)
 
-        var map = L.map('map').setView([51.505, -0.09], 10);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
+        const deg = response.daily_units.temperature_2m_max
+        const rain = response.daily_units.rain_sum
+        const snow = response.daily_units.snowfall_sum
+
+        const sevendayDate = response.daily.time
+        const sevendayWeathercode = response.daily.weathercode
+        const sevendayTempMax = response.daily.temperature_2m_max
+        const sevendayTempMin = response.daily.temperature_2m_min
+        const sevendaySunrise = response.daily.sunrise
+        const sevendaySunset = response.daily.sunset
+        const sevendayRainsum = response.daily.rain_sum
+        const sevendaySnowfall = response.daily.snowfall_sum
+
+        console.log(Date(sevendayDate[0], '%mm'))
+
+        document.getElementById("days").innerHTML = 
+`<table id="sevday">
+    <tr>
+        <th>Date</th>
+        <th>Min Temp (${deg})</th>
+        <th>Max Temp (${deg})</th>
+        <th>Sunrise</th>
+        <th>Sunset</th>
+        <th>Rain (${rain})</th>
+        <th>Snowfall (${snow})</th>
+    </tr>
+    <tr id="0">
+        <td>${sevendayDate[0]}</td>
+        <td>${sevendayTempMin[0]}</td>
+        <td>${sevendayTempMax[0]}</td>
+        <td>${sevendaySunrise[0]}</td>
+        <td>${sevendaySunset[0]}</td>
+        <td>${sevendayRainsum[0]}</td>
+        <td>${sevendaySnowfall[0]}</td>
+    </tr>
+    <tr id="1">
+        <td>${sevendayDate[1]}</td>
+        <td>${sevendayTempMin[1]}</td>
+        <td>${sevendayTempMax[1]}</td>
+        <td>${sevendaySunrise[1]}</td>
+        <td>${sevendaySunset[1]}</td>
+        <td>${sevendayRainsum[1]}</td>
+        <td>${sevendaySnowfall[1]}</td>
+    </tr>
+    <tr id="2">
+        <td>${sevendayDate[2]}</td>
+        <td>${sevendayTempMin[2]}</td>
+        <td>${sevendayTempMax[2]}</td>
+        <td>${sevendaySunrise[2]}</td>
+        <td>${sevendaySunset[2]}</td>
+        <td>${sevendayRainsum[2]}</td>
+        <td>${sevendaySnowfall[2]}</td>
+    </tr>
+    <tr id="3">
+        <td>${sevendayDate[3]}</td>
+        <td>${sevendayTempMin[3]}</td>
+        <td>${sevendayTempMax[3]}</td>
+        <td>${sevendaySunrise[3]}</td>
+        <td>${sevendaySunset[3]}</td>
+        <td>${sevendayRainsum[3]}</td>
+        <td>${sevendaySnowfall[3]}</td>
+    </tr>
+    <tr id="4">
+        <td>${sevendayDate[4]}</td>
+        <td>${sevendayTempMin[4]}</td>
+        <td>${sevendayTempMax[4]}</td>
+        <td>${sevendaySunrise[4]}</td>
+        <td>${sevendaySunset[4]}</td>
+        <td>${sevendayRainsum[4]}</td>
+        <td>${sevendaySnowfall[4]}</td>
+    </tr>
+    <tr id="5">
+        <td>${sevendayDate[5]}</td>
+        <td>${sevendayTempMin[5]}</td>
+        <td>${sevendayTempMax[5]}</td>
+        <td>${sevendaySunrise[5]}</td>
+        <td>${sevendaySunset[5]}</td>
+        <td>${sevendayRainsum[5]}</td>
+        <td>${sevendaySnowfall[5]}</td>
+    </tr>
+    <tr id="6">
+        <td>${sevendayDate[6]}</td>
+        <td>${sevendayTempMin[6]}</td>
+        <td>${sevendayTempMax[6]}</td>
+        <td>${sevendaySunrise[6]}</td>
+        <td>${sevendaySunset[6]}</td>
+        <td>${sevendayRainsum[6]}</td>
+        <td>${sevendaySnowfall[6]}</td>
+    </tr>
+</table>
+<p>Today the weather is "${weatherCodeFixer(sevendayWeathercode[0])}"</p>
+`
+
+        console.log(response)
+
+        
 
         // TODO LEAFLET MAP AND INFORMATION TO CLIENT WHAT KIND OF WEATHER THERE IS NOW
         
     })
-
-    
-
-
-    
 </script>
 </html>
