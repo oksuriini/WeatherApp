@@ -39,7 +39,6 @@
     <div id="days"></div>
 
     <h2>Weather d3 TODO thingamajinga</h2>
-    <div id="map"></div>
 </body>
 <script src="https://d3js.org/d3.v6.js"></script>
 <script>
@@ -201,6 +200,9 @@
         const sevendayRainsum = response.daily.rain_sum
         const sevendaySnowfall = response.daily.snowfall_sum
 
+        const latMap = response.latitude
+        const lonMap = response.longitude
+
         console.log(Date(sevendayDate[0], '%mm'))
 
         document.getElementById("days").innerHTML = 
@@ -279,14 +281,23 @@
     </tr>
 </table>
 <p>Today the weather is "${weatherCodeFixer(sevendayWeathercode[0])}"</p>
+<div id="map">
 `
 
-        console.log(response)
+    console.log(response)
 
-        
 
-        // TODO LEAFLET MAP AND INFORMATION TO CLIENT WHAT KIND OF WEATHER THERE IS NOW
-        
+    var map = L.map('map').setView([latMap, lonMap], 13);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    L.marker([latMap, lonMap]).addTo(map)
+        .bindPopup(`Today the weather is ${weatherCodeFixer(sevendayWeathercode[0])}.<br> Temperature ranging from min: ${sevendayTempMin[0]}${deg}, max: ${sevendayTempMax[0]}${deg}`)
+        .openPopup();
     })
+
+    // TODO D3 hourly temperature chart
 </script>
 </html>
